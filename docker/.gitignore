@@ -1,0 +1,21 @@
+# Datos DICOM: nunca al repositorio
+data/
+*.dcm
+
+# Volúmenes y persistencia de los contenedores
+docker/volumes/
+postgres-data/
+orthanc-storage/
+
+# Credenciales y configuración local
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
