@@ -9,16 +9,8 @@ import pydicom
 import requests
 
 from enviar_orthanc import enviar_stow
+from enviar_orthanc import enviar_stow, ORTHANC, AUTH
 
-ORTHANC = os.environ.get("ORTHANC_URL", "http://localhost:8042")
-try:
-    AUTH = (os.environ["ORTHANC_USER"], os.environ["ORTHANC_PASSWORD"])
-except KeyError:
-    raise SystemExit(
-        "Faltan las credenciales de Orthanc. Definelas antes de ejecutar:\n"
-        "  export ORTHANC_USER=...\n"
-        "  export ORTHANC_PASSWORD=..."
-    )
 RAIZ = Path(__file__).resolve().parent.parent / "data" / "anonimizados"
 
 encontrados = RAIZ.rglob("*.dcm")
