@@ -1,0 +1,59 @@
+# Requiere un fichero .env en esta misma carpeta.
+# Copia .env.example a .env y cambia las credenciales antes de ejecutar:
+#   docker compose up -d
+name: tfm-pacs
+services:
+  postgres:
+    image: postgres:16
+    container_name: tfm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dicom-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  orthanc:
+    image: orthancteam/orthanc:25.2.0
+    container_name: tfm-orthanc
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${ORTHANC_HTTP_PORT}:8042"
+      - "${ORTHANC_DICOM_PORT}:4242"
+    environment:
+      ORTHANC__NAME: "PACS-TFM"
+      ORTHANC__DICOM_AET: "ORTHANC_TFM"
+      ORTHANC__DICOM_SERVER_ENABLED: "true"
+      ORTHANC__REGISTERED_USERS: |
+        {"${ORTHANC_USER}": "${ORTHANC_PASSWORD}"}
+      POSTGRESQL_PLUGIN_ENABLED: "true"
+      ORTHANC__POSTGRESQL__HOST: "postgres"
+      ORTHANC__POSTGRESQL__DATABASE: ${POSTGRES_DB}
+      ORTHANC__POSTGRESQL__USERNAME: ${POSTGRES_USER}
+      ORTHANC__POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      DICOM_WEB_PLUGIN_ENABLED: "true"
+      OHIF_PLUGIN_ENABLED: "true"
+      VERBOSE_STARTUP: "true"
+    volumes:
+      - orthanc-storage:/var/lib/orthanc/db
+    networks:
+      - dicom-net
+
+volumes:
+  postgres-data:
+  orthanc-storage:
+
+networks:
+  dicom-net:
+    driver: bridge
